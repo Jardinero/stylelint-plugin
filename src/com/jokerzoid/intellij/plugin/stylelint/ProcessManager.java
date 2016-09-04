@@ -7,26 +7,28 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.nio.charset.Charset;
 
 /**
  * This class executes stylelint assuming two things:
- * 1. There is an NVM_HOME variable define. This path contains the stylelint executable.
+ * 1. There is an STYLELINT_HOME variable define. This path contains the stylelint executable.
  * 2. There is a stylelint config file in the root directory of the project.
  * @author Raul
  */
 class ProcessManager {
     private static final Logger LOGGER = Logger.getInstance(ProcessManager.class);
-    private static final String NVM_HOME = "NVM_HOME";
-    private static final String STYLELINT_COMMAND = "stylelint";
+    private static final String STYLELINT_HOME = "STYLELINT_HOME";
+    private static final String STYLELINT_COMMAND = "stylelint.cmd";
 
     static Process createStylelintProcess(final PsiFile psiFile) {
-        final String nvmHome = getNvmHome();
+        final String stylelintHome = getStylelintHome();
 
-        if (nvmHome == null) {
-            LOGGER.error("NVM_HOME is null. Is the environment variable set and visible by the current process?");
+        if (stylelintHome == null) {
+            LOGGER.error("STYLELINT_HOME is null. Is the environment variable set and visible by the current process?");
             return null;
         }
 
@@ -37,11 +39,14 @@ class ProcessManager {
             return null;
         }
 
-        final GeneralCommandLine commandLine = new GeneralCommandLine(STYLELINT_COMMAND);
+        final GeneralCommandLine commandLine = new GeneralCommandLine();
 
-        commandLine.setExePath(NVM_HOME);
+        commandLine.setExePath(stylelintHome + File.separator + STYLELINT_COMMAND);
+        commandLine.setWorkDirectory(psiFile.getProject().getBasePath());
         commandLine.withEnvironment(System.getenv());
+        commandLine.addParameters("-f", "json");
         commandLine.addParameter(virtualFile.getPath());
+        commandLine.setCharset(Charset.forName("UTF8"));
 
         try {
             return commandLine.createProcess();
@@ -75,11 +80,15 @@ class ProcessManager {
         return output.toString();
     }
 
-    private static String getNvmHome() {
+    static String getOutputAsJson(final String source) {
+        return null;
+    }
+
+    private static String getStylelintHome() {
         try {
-            return System.getenv(NVM_HOME);
+            return System.getenv(STYLELINT_HOME);
         } catch (final SecurityException ex) {
-            LOGGER.error("Could not retrieve the value of the NVM_HOME variable.", ex);
+            LOGGER.error("Could not retrieve the value of the STYLELINT_HOME variable.", ex);
             return null;
         }
     }

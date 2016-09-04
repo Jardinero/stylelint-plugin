@@ -24,7 +24,7 @@
 
   <extensions defaultExtensionNs="com.intellij">
     <!-- Add your extensions here -->
-    <externalAnnotator language="TEXT" implementationClass="com.jokerzoid.intellij.plugin.stylelint.StylelintAnnotator" />
+    <externalAnnotator language="CSS" implementationClass="com.jokerzoid.intellij.plugin.stylelint.StylelintAnnotator" />
   </extensions>
 
   <actions>

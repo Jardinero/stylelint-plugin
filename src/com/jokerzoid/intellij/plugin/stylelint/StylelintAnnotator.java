@@ -64,6 +64,7 @@ public class StylelintAnnotator extends ExternalAnnotator<PsiFile, List<Stylelin
         annotationResult.forEach(result -> {
             final TextRange range = result.node.getTextRange();
 
+            holder.createErrorAnnotation(range, result.message);
             LOGGER.info("Apply");
         });
     }
