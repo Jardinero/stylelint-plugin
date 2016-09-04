@@ -4,30 +4,19 @@ import com.intellij.lang.annotation.AnnotationHolder;
 import com.intellij.lang.annotation.ExternalAnnotator;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.util.PsiUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
  * @author Raul
  */
-public class StylelintAnnotator extends ExternalAnnotator<PsiFile, List<StylelintAnnotator.AnnotationResult>> {
+public class StylelintAnnotator extends ExternalAnnotator<PsiFile, List<StylelintWarning>> {
     private static final Logger LOGGER = Logger.getInstance(StylelintAnnotator.class);
-
-    static class AnnotationResult {
-        String message;
-        PsiElement node;
-
-        AnnotationResult(String message, PsiElement node) {
-            this.message = message;
-            this.node = node;
-        }
-    }
 
     public StylelintAnnotator() {
         LOGGER.info("StylelintAnnotator");
@@ -47,24 +36,18 @@ public class StylelintAnnotator extends ExternalAnnotator<PsiFile, List<Stylelin
 
     @Nullable
     @Override
-    public List<AnnotationResult> doAnnotate(PsiFile file) {
-        final Process process = ProcessManager.createStylelintProcess(file);
-        final String output = ProcessManager.getOutput(process);
+    public List<StylelintWarning> doAnnotate(PsiFile file) {
+        final StylelintOutput output = ProcessManager.runStylelint(file);
 
-        final List<AnnotationResult> results = new ArrayList<>(1);
-        final AnnotationResult result = new AnnotationResult("First Annotation", file.getFirstChild());
-
-        results.add(result);
-
-        return results;
+        return output.getWarnings();
     }
 
     @Override
-    public void apply(@NotNull PsiFile file, List<AnnotationResult> annotationResult, @NotNull AnnotationHolder holder) {
-        annotationResult.forEach(result -> {
-            final TextRange range = result.node.getTextRange();
+    public void apply(@NotNull PsiFile file, List<StylelintWarning> warnings, @NotNull AnnotationHolder holder) {
+        warnings.forEach(warning -> {
+            final PsiElement element = PsiUtil.getElementAtOffset(file, warning.getOffset());
 
-            holder.createErrorAnnotation(range, result.message);
+            holder.createErrorAnnotation(element, warning.getText());
             LOGGER.info("Apply");
         });
     }

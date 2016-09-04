@@ -1,8 +1,12 @@
 package com.jokerzoid.intellij.plugin.stylelint;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 
@@ -24,7 +28,14 @@ class ProcessManager {
     private static final String STYLELINT_HOME = "STYLELINT_HOME";
     private static final String STYLELINT_COMMAND = "stylelint.cmd";
 
-    static Process createStylelintProcess(final PsiFile psiFile) {
+    static StylelintOutput runStylelint(final PsiFile file) {
+        final Process process = createStylelintProcess(file);
+        final String source = getOutputAsString(process);
+
+        return getOutput(source);
+    }
+
+    private static Process createStylelintProcess(final PsiFile psiFile) {
         final String stylelintHome = getStylelintHome();
 
         if (stylelintHome == null) {
@@ -56,7 +67,24 @@ class ProcessManager {
         }
     }
 
-    static String getOutput(final Process process) {
+    private static StylelintOutput getOutput(final String source) {
+        final Gson gson = new Gson();
+        final JsonParser parser = new JsonParser();
+
+        /* Stylelint can process several files with one execution, since this process is ran once per file we only need
+         * the first result */
+        final JsonElement element = parser.parse(source).getAsJsonArray().get(0);
+        final StylelintOutput output = gson.fromJson(element, StylelintOutput.class);
+
+        /* Since IntelliJ uses offsets instead of (line, col) we need to convert them */
+        output.getWarnings().forEach(warning -> {
+            warning.setOffset(StringUtil.lineColToOffset(source, warning.getLine(), warning.getColumn()));
+        });
+
+        return output;
+    }
+
+    private static String getOutputAsString(final Process process) {
         if (process == null) {
             LOGGER.warn("Process is null. Nothing to process.");
             return null;
@@ -78,10 +106,6 @@ class ProcessManager {
         }
 
         return output.toString();
-    }
-
-    static String getOutputAsJson(final String source) {
-        return null;
     }
 
     private static String getStylelintHome() {
