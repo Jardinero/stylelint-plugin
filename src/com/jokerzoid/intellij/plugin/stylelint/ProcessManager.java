@@ -73,7 +73,7 @@ class ProcessManager {
 
         /* Since IntelliJ uses offsets instead of (line, col) we need to convert them */
         output.getWarnings().forEach(warning -> {
-            warning.setOffset(StringUtil.lineColToOffset(text, warning.getLine(), warning.getColumn()));
+            warning.setOffset(StringUtil.lineColToOffset(text, warning.getLine() - 1, warning.getColumn()));
         });
 
         return output;
