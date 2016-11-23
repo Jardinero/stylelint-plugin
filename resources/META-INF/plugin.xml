@@ -1,17 +1,17 @@
 <idea-plugin version="2">
   <id>com.jokerzoid.intellij.plugin.stylelint</id>
   <name>IntelliJ Stylelint Plugin</name>
-  <version>1.0</version>
-  <vendor email="support@yourcompany.com" url="http://www.yourcompany.com">YourCompany</vendor>
+  <version>1.1</version>
+  <vendor url="https://github.com/Jardinero/stylelint-plugin">Jardinero</vendor>
 
   <description><![CDATA[
-      Enter short description for your plugin here.<br>
-      <em>most HTML tags may be used</em>
+      Stylelint plugin for all products based on IntelliJ Platform (IntelliJ IDEA, RubyMine, WebStorm, PhpStorm, PyCharm, AppCode, etc.)<br><br>
+
+      Requires STYLELINT_HOME environment variable pointing to Stylelint folder unless it is installed globally: <code>npm install -g stylelint</code>
     ]]></description>
 
   <change-notes><![CDATA[
-      Add change notes here.<br>
-      <em>most HTML tags may be used</em>
+      Version 1.1: CSS/SCSS/LESS support
     ]]>
   </change-notes>
 
@@ -25,10 +25,11 @@
   <extensions defaultExtensionNs="com.intellij">
     <!-- Add your extensions here -->
     <externalAnnotator language="CSS" implementationClass="com.jokerzoid.intellij.plugin.stylelint.StylelintAnnotator" />
+    <externalAnnotator language="SCSS" implementationClass="com.jokerzoid.intellij.plugin.stylelint.StylelintAnnotator" />
+    <externalAnnotator language="LESS" implementationClass="com.jokerzoid.intellij.plugin.stylelint.StylelintAnnotator" />
   </extensions>
 
   <actions>
     <!-- Add your actions here -->
   </actions>
-
 </idea-plugin>
