@@ -47,7 +47,7 @@ public class StylelintAnnotator extends ExternalAnnotator<PsiFile, List<Stylelin
         warnings.forEach(warning -> {
             final PsiElement element = PsiUtil.getElementAtOffset(file, warning.getOffset());
 
-            holder.createErrorAnnotation(element, warning.getText());
+            holder.createWarningAnnotation(element, warning.getText());
             LOGGER.info("Apply");
         });
     }
