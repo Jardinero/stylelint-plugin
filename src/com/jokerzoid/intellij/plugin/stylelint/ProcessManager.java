@@ -32,17 +32,11 @@ class ProcessManager {
         final Process process = createStylelintProcess(file);
         final String source = getOutputAsString(process);
 
-        return getOutput(source);
+        return getOutput(source, file);
     }
 
     private static Process createStylelintProcess(final PsiFile psiFile) {
         final String stylelintHome = getStylelintHome();
-
-        if (stylelintHome == null) {
-            LOGGER.error("STYLELINT_HOME is null. Is the environment variable set and visible by the current process?");
-            return null;
-        }
-
         final VirtualFile virtualFile = psiFile.getVirtualFile();
 
         if (virtualFile == null) {
@@ -52,7 +46,7 @@ class ProcessManager {
 
         final GeneralCommandLine commandLine = new GeneralCommandLine();
 
-        commandLine.setExePath(stylelintHome + File.separator + STYLELINT_COMMAND);
+        commandLine.setExePath((stylelintHome == null ? "" : stylelintHome + File.separator) + STYLELINT_COMMAND);
         commandLine.setWorkDirectory(psiFile.getProject().getBasePath());
         commandLine.withEnvironment(System.getenv());
         commandLine.addParameters("-f", "json");
@@ -67,9 +61,10 @@ class ProcessManager {
         }
     }
 
-    private static StylelintOutput getOutput(final String source) {
+    private static StylelintOutput getOutput(final String source, final PsiFile psiFile) {
         final Gson gson = new Gson();
         final JsonParser parser = new JsonParser();
+        final String text = psiFile.getText();
 
         /* Stylelint can process several files with one execution, since this process is ran once per file we only need
          * the first result */
@@ -78,7 +73,7 @@ class ProcessManager {
 
         /* Since IntelliJ uses offsets instead of (line, col) we need to convert them */
         output.getWarnings().forEach(warning -> {
-            warning.setOffset(StringUtil.lineColToOffset(source, warning.getLine(), warning.getColumn()));
+            warning.setOffset(StringUtil.lineColToOffset(text, warning.getLine(), warning.getColumn()));
         });
 
         return output;
