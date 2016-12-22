@@ -11,6 +11,8 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 
+import org.apache.commons.lang.StringUtils;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -28,7 +30,6 @@ import java.nio.charset.Charset;
 class ProcessManager {
   private static final Logger LOGGER = Logger.getInstance(ProcessManager.class.getPackage().getName());
   private static final String STYLELINT_HOME = "STYLELINT_HOME";
-  private static final String STYLELINT_COMMAND = "stylelint";
 
   static StylelintOutput runStylelint(final PsiFile file) {
     final Process process = createStylelintProcess(file);
@@ -41,7 +42,6 @@ class ProcessManager {
   }
 
   private static Process createStylelintProcess(final PsiFile psiFile) {
-    final String stylelintHome = getStylelintHome();
     final VirtualFile virtualFile = psiFile.getVirtualFile();
 
     if (virtualFile == null) {
@@ -51,7 +51,7 @@ class ProcessManager {
 
     final GeneralCommandLine commandLine = new GeneralCommandLine();
 
-    commandLine.setExePath((stylelintHome == null ? "" : stylelintHome + File.separator) + STYLELINT_COMMAND);
+    commandLine.setExePath(getDefaultExePath());
     commandLine.setWorkDirectory(psiFile.getProject().getBasePath());
     commandLine.withEnvironment(System.getenv());
     commandLine.addParameters("-f", "json");
@@ -113,12 +113,39 @@ class ProcessManager {
     return output.toString();
   }
 
-  private static String getStylelintHome() {
+  /**
+   * This method just takes the value of the STYLELINT_HOME variable if it is set. This is the
+   * default value when there is nothing configured in Preferences.
+   * @return The executable path.
+   */
+  static String getDefaultExePath() {
     try {
-      return System.getenv(STYLELINT_HOME);
+      String stylelintHome = StringUtils.defaultIfEmpty((System.getenv(STYLELINT_HOME)), "");
+
+      return stylelintHome + File.separator + getDefaultExe();
     } catch (final SecurityException ex) {
       LOGGER.error("Could not retrieve the value of the STYLELINT_HOME variable.", ex);
-      return null;
+      return "";
     }
+  }
+
+  /**
+   * This function detects the operating system based on the os.name property, if it is Windows
+   * it will append .cmd at the end.
+   * Left this here for the few people who started using the plugin since the first version which
+   * required the STYLELINT_HOME variable set.
+   * @return The executable name
+   */
+  private static String getDefaultExe() {
+
+    /* I'm assuming only windows uses .cmd extension. */
+    String osName = StringUtils.defaultIfEmpty(System.getProperty("os.name"), "").toLowerCase();
+    String exe = "stylelint";
+
+    if (osName.contains("windows")) {
+      return exe.concat(".cmd");
+    }
+
+    return exe;
   }
 }
