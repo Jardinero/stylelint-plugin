@@ -17,8 +17,6 @@ public class ProjectService implements PersistentStateComponent<ProjectService> 
   private static final Logger LOGGER = Logger.getInstance(ProjectService.class.getPackage().getName());
 
   public String executable = "";
-  public String arguments = "";
-  public String configuration = "";
 
   public ProjectService() {
     LOGGER.debug("ProjectService instantiated.");

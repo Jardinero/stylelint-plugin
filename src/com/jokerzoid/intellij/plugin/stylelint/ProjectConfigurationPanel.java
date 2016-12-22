@@ -1,12 +1,17 @@
 package com.jokerzoid.intellij.plugin.stylelint;
 
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SearchableConfigurable;
 import com.intellij.openapi.project.Project;
 
+import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.awt.event.ActionEvent;
+import java.io.File;
 
 import javax.swing.*;
 
@@ -14,22 +19,21 @@ import javax.swing.*;
  * @author rrosa
  */
 public class ProjectConfigurationPanel implements SearchableConfigurable {
+  private static final Logger LOGGER = Logger.getInstance(ProjectConfigurationPanel.class.getPackage().getName());
   private JLabel executableLabel;
   private JTextField executableTextField;
   private JButton executableDirButton;
-  private JTextField commandLineArgumentsTextField;
-  private JLabel commandLineArgumentsLabel;
-  private JLabel configurationFileLabel;
-  private JTextField configurationFileTextField;
   private JPanel rootPanel;
-  private JButton configurationFileButton;
+  private JFileChooser fileChooser;
 
   private ProjectService state;
-  private Project project;
-  public ProjectConfigurationPanel(@NotNull Project project) {
-    this.project = project;
-  }
 
+  public ProjectConfigurationPanel(@NotNull Project project) {
+    this.state = ProjectService.getInstance(project).getState();
+    fileChooser = new JFileChooser();
+
+    this.addListeners();
+  }
 
   @Nls
   @Override
@@ -46,33 +50,26 @@ public class ProjectConfigurationPanel implements SearchableConfigurable {
   @Nullable
   @Override
   public JComponent createComponent() {
-    this.state = ProjectService.getInstance(project).getState();
     return rootPanel;
   }
 
   @Override
   public boolean isModified() {
-    boolean modified;
-
-    modified = !executableTextField.getText().equals(state.executable);
-    modified |= !commandLineArgumentsTextField.getText().equals(state.arguments);
-    modified |= !configurationFileTextField.getText().equals(state.configuration);
-
-    return modified;
+    return !executableTextField.getText().equals(state.executable);
   }
 
   @Override
   public void apply() throws ConfigurationException {
     state.executable = executableTextField.getText();
-    state.arguments = commandLineArgumentsTextField.getToolTipText();
-    state.configuration = configurationFileTextField.getText();
   }
 
   @Override
   public void reset() {
-    executableTextField.setText(state.executable);
-    commandLineArgumentsTextField.setText(state.arguments);
-    configurationFileTextField.setText(state.configuration);
+    if (StringUtils.isEmpty(state.executable)) {
+      executableTextField.setText(ProcessManager.getDefaultExePath());
+    } else {
+      executableTextField.setText(state.executable);
+    }
   }
 
   @NotNull
@@ -86,4 +83,21 @@ public class ProjectConfigurationPanel implements SearchableConfigurable {
   public Runnable enableSearch(String option) {
     return null;
   }
+
+  private void addListeners() {
+    executableDirButton.addActionListener((ActionEvent event) -> {
+      int returnValue = fileChooser.showDialog(rootPanel, "Select");
+
+      if (returnValue == JFileChooser.APPROVE_OPTION) {
+        File file = fileChooser.getSelectedFile();
+
+        LOGGER.debug("Selected file: " + file.getPath());
+
+        executableTextField.setText(file.getPath());
+      } else {
+        LOGGER.debug("User canceled the file selection.");
+      }
+    });
+  }
+
 }
