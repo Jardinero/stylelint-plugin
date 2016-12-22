@@ -1,7 +1,7 @@
 <idea-plugin version="2">
   <id>com.jokerzoid.intellij.plugin.stylelint</id>
   <name>IntelliJ Stylelint Plugin</name>
-  <version>1.1</version>
+  <version>1.2</version>
   <vendor url="https://github.com/Jardinero/stylelint-plugin">Jardinero</vendor>
 
   <description><![CDATA[
@@ -27,6 +27,8 @@
     <externalAnnotator language="CSS" implementationClass="com.jokerzoid.intellij.plugin.stylelint.StylelintAnnotator" />
     <externalAnnotator language="SCSS" implementationClass="com.jokerzoid.intellij.plugin.stylelint.StylelintAnnotator" />
     <externalAnnotator language="LESS" implementationClass="com.jokerzoid.intellij.plugin.stylelint.StylelintAnnotator" />
+    <projectService serviceImplementation="com.jokerzoid.intellij.plugin.stylelint.ProjectService" />
+    <projectConfigurable groupId="tools" instance="com.jokerzoid.intellij.plugin.stylelint.ProjectConfigurationPanel"/>
   </extensions>
 
   <actions>
