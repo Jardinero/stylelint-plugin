@@ -1,17 +1,17 @@
 <idea-plugin version="2">
   <id>com.jokerzoid.intellij.plugin.stylelint</id>
   <name>IntelliJ Stylelint Plugin</name>
-  <version>1.1</version>
+  <version>1.3</version>
   <vendor url="https://github.com/Jardinero/stylelint-plugin">Jardinero</vendor>
 
   <description><![CDATA[
       Stylelint plugin for all products based on IntelliJ Platform (IntelliJ IDEA, RubyMine, WebStorm, PhpStorm, PyCharm, AppCode, etc.)<br><br>
 
-      Requires STYLELINT_HOME environment variable pointing to Stylelint folder unless it is installed globally: <code>npm install -g stylelint</code>
+      Configure the path to the <code>stylelint</code> executable through Preferences -> Tools -> Stylelint
     ]]></description>
 
   <change-notes><![CDATA[
-      Version 1.1: CSS/SCSS/LESS support
+      Version 1.3: STYLELINT_HOME is no longer a requirement. Now the path to the executable can be set through preferences.
     ]]>
   </change-notes>
 
@@ -27,6 +27,8 @@
     <externalAnnotator language="CSS" implementationClass="com.jokerzoid.intellij.plugin.stylelint.StylelintAnnotator" />
     <externalAnnotator language="SCSS" implementationClass="com.jokerzoid.intellij.plugin.stylelint.StylelintAnnotator" />
     <externalAnnotator language="LESS" implementationClass="com.jokerzoid.intellij.plugin.stylelint.StylelintAnnotator" />
+    <projectService serviceImplementation="com.jokerzoid.intellij.plugin.stylelint.ProjectService" />
+    <projectConfigurable groupId="tools" instance="com.jokerzoid.intellij.plugin.stylelint.ProjectConfigurationPanel"/>
   </extensions>
 
   <actions>
