@@ -3,7 +3,6 @@ package com.jokerzoid.intellij.plugin.stylelint;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
-
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.openapi.diagnostic.Logger;
@@ -11,26 +10,32 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
-
+import com.jokerzoid.intellij.plugin.stylelint.executable.StylelintExecutableHelper;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.Charset;
 
 /**
- * This class executes stylelint assuming two things:
- * 1. There is an STYLELINT_HOME variable define. This path contains the stylelint executable.
- * 2. There is a stylelint config file in the root directory of the project.
+ * This class executes stylelint. The application will auto-search for a binary
+ * using the {@code StylelintExecutableHelper} and will remember that value on
+ * a project basis.
+ *
+ * If the user has manually specified a value in the settings, that value is
+ * used instead and no searching will take place (meaning this is probably less
+ * intensive on the computer).
  *
  * @author Raul
+ * @author Roelof Roos <github@roelof.io>
  */
 class ProcessManager {
+
   private static final Logger LOGGER = Logger.getInstance(ProcessManager.class.getPackage().getName());
-  private static final String STYLELINT_HOME = "STYLELINT_HOME";
+
+  private static final StylelintExecutableHelper helper = new StylelintExecutableHelper();
 
   static StylelintOutput runStylelint(final PsiFile file) {
     final Process process = createStylelintProcess(file);
@@ -54,7 +59,7 @@ class ProcessManager {
     final Project project = psiFile.getProject();
     final ProjectService state = ProjectService.getInstance(project);
 
-    commandLine.setExePath(StringUtils.defaultIfEmpty(state.executable, getDefaultExePath()));
+    commandLine.setExePath(StringUtils.defaultIfEmpty(state.executable, getStylelintPath(project)));
     commandLine.setWorkDirectory(project.getBasePath());
     commandLine.withEnvironment(System.getenv());
     commandLine.addParameters("-f", "json");
@@ -117,38 +122,12 @@ class ProcessManager {
   }
 
   /**
-   * This method just takes the value of the STYLELINT_HOME variable if it is set. This is the
-   * default value when there is nothing configured in Preferences.
-   * @return The executable path.
+   * Asks the path helper for the right binary for stylelint
+   *
+   * @param project Project to search in and to cache with
+   * @return Path to the stylelint application, or null if not found
    */
-  static String getDefaultExePath() {
-    try {
-      String stylelintHome = StringUtils.defaultIfEmpty((System.getenv(STYLELINT_HOME)), "");
-
-      return stylelintHome + File.separator + getDefaultExe();
-    } catch (final SecurityException ex) {
-      LOGGER.error("Could not retrieve the value of the STYLELINT_HOME variable.", ex);
-      return "";
-    }
-  }
-
-  /**
-   * This function detects the operating system based on the os.name property, if it is Windows
-   * it will append .cmd at the end.
-   * Left this here for the few people who started using the plugin since the first version which
-   * required the STYLELINT_HOME variable set.
-   * @return The executable name
-   */
-  private static String getDefaultExe() {
-
-    /* I'm assuming only windows uses .cmd extension. */
-    String osName = StringUtils.defaultIfEmpty(System.getProperty("os.name"), "").toLowerCase();
-    String exe = "stylelint";
-
-    if (osName.contains("windows")) {
-      return exe.concat(".cmd");
-    }
-
-    return exe;
+  static String getStylelintPath(Project project) {
+    return helper.findExecutable(project);
   }
 }

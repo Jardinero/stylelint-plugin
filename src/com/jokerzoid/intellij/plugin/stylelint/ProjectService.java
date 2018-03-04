@@ -35,6 +35,9 @@ public class ProjectService implements PersistentStateComponent<ProjectService> 
   @Override
   public void loadState(ProjectService state) {
     XmlSerializerUtil.copyBean(state, this);
+    if (this.executable.equals("/stylelint") || this.executable.equals("/stylelint.cmd")) {
+      this.executable = "";
+    }
   }
 
 }

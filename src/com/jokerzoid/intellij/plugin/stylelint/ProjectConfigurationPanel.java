@@ -24,6 +24,7 @@ public class ProjectConfigurationPanel implements SearchableConfigurable {
   private JTextField executableTextField;
   private JButton executableDirButton;
   private JPanel rootPanel;
+  private JTextPane descriptionPane;
   private JFileChooser fileChooser;
 
   private ProjectService state;
@@ -66,7 +67,7 @@ public class ProjectConfigurationPanel implements SearchableConfigurable {
   @Override
   public void reset() {
     if (StringUtils.isEmpty(state.executable)) {
-      executableTextField.setText(ProcessManager.getDefaultExePath());
+      executableTextField.setText(StringUtils.EMPTY);
     } else {
       executableTextField.setText(state.executable);
     }
