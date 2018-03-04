@@ -6,7 +6,6 @@ import com.intellij.openapi.components.State;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.util.xmlb.XmlSerializerUtil;
-
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -35,6 +34,9 @@ public class ProjectService implements PersistentStateComponent<ProjectService> 
   @Override
   public void loadState(ProjectService state) {
     XmlSerializerUtil.copyBean(state, this);
+    if (this.executable.equals("/stylelint") || this.executable.equals("/stylelint.cmd")) {
+      this.executable = "";
+    }
   }
 
 }

@@ -4,16 +4,14 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SearchableConfigurable;
 import com.intellij.openapi.project.Project;
-
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.io.File;
-
-import javax.swing.*;
 
 /**
  * @author rrosa
@@ -24,6 +22,7 @@ public class ProjectConfigurationPanel implements SearchableConfigurable {
   private JTextField executableTextField;
   private JButton executableDirButton;
   private JPanel rootPanel;
+  private JTextPane descriptionPane;
   private JFileChooser fileChooser;
 
   private ProjectService state;
@@ -66,7 +65,7 @@ public class ProjectConfigurationPanel implements SearchableConfigurable {
   @Override
   public void reset() {
     if (StringUtils.isEmpty(state.executable)) {
-      executableTextField.setText(ProcessManager.getDefaultExePath());
+      executableTextField.setText(StringUtils.EMPTY);
     } else {
       executableTextField.setText(state.executable);
     }
